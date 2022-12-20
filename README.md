@@ -1,1 +1,1 @@
-# studybot
+# Steam-Bot
