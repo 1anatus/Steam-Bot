@@ -1,0 +1,91 @@
+{
+    "multiCountryCurrencies": {
+        "currency": [
+            {
+                "currencyCode": "ANG",
+                "countryCode": "SX",
+                "currencyName": "Netherlands Antillean guilder"
+            },
+            {
+                "currencyCode": "AUD",
+                "countryCode": "AU",
+                "currencyName": "Australian Dollar"
+            },
+            {
+                "currencyCode": "CHF",
+                "countryCode": "CH",
+                "currencyName": "Swiss Franc"
+            },
+            {
+                "currencyCode": "DKK",
+                "countryCode": "DK",
+                "currencyName": "Danish Krone"
+            },
+            {
+                "currencyCode": "EUR",
+                "countryCode": "DE",
+                "currencyName": "EURO"
+            },
+            {
+                "currencyCode": "GBP",
+                "countryCode": "GB",
+                "currencyName": "Pound Sterling"
+            },
+            {
+                "currencyCode": "INR",
+                "countryCode": "IN",
+                "currencyName": "Indian Rupee"
+            },
+            {
+                "currencyCode": "MAD",
+                "countryCode": "MA",
+                "currencyName": "Moroccan Dirham"
+            },
+            {
+                "currencyCode": "NOK",
+                "countryCode": "NO",
+                "currencyName": "Norwegian Krone"
+            },
+            {
+                "currencyCode": "NZD",
+                "countryCode": "NZ",
+                "currencyName": "New Zealand Dollar"
+            },
+            {
+                "currencyCode": "SHP",
+                "countryCode": "SH",
+                "currencyName": "Saint Helena Pound"
+            },
+            {
+                "currencyCode": "USD",
+                "countryCode": "US",
+                "currencyName": "United States Dollar"
+            },
+            {
+                "currencyCode": "XAF",
+                "countryCode": "CM",
+                "currencyName": "CFA Franc BEAC"
+            },
+            {
+                "currencyCode": "XCD",
+                "countryCode": "DM",
+                "currencyName": "East Caribbean Dollar"
+            },
+            {
+                "currencyCode": "XOF",
+                "countryCode": "SN",
+                "currencyName": "CFA Framc BCEAO"
+            },
+            {
+                "currencyCode": "XPF",
+                "countryCode": "PF",
+                "currencyName": "CFP Franc"
+            },
+            {
+                "currencyCode": "ZAR",
+                "countryCode": "ZA",
+                "currencyName": "South African Rand"
+            }
+        ]
+    }
+}
