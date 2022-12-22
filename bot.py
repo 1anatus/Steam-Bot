@@ -28,8 +28,8 @@ bot = commands.Bot(command_prefix = "#", description = description, intents = in
 newLine = "\n"
 
 @bot.command()
-async def search(ctx, input):
-    if input is None:
+async def search(ctx, *, usrInput: str):
+    if usrInput is None:
         embed = discord.Embed()
         embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
         await ctx.send(embed = embed)
@@ -37,7 +37,25 @@ async def search(ctx, input):
     
     url = f"http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key={keys.steamAPI.key}&format=json"
     response = urlopen(url)
-    _dataJSON = json.loads(response.read())[f"{id}"]
+    dataJSON = json.loads(response.read())["applist"]["apps"]
+
+    names = []
+    for i in dataJSON:
+        names.append([i["name"], fuzz.ratio(i["name"], usrInput), i["appid"]])
+
+    matches = []
+    for i in range(0, 10):
+        max1 = [None, 0]
+
+        for x in range(len(names)):
+            if names[x][1] > max1[1]:
+                max1 = [names[x][0], names[x][1], names[x][2]]
+        
+        names.remove(max1)
+        matches.append(max1)
+
+    await ctx.send(matches)
+
 
 @bot.command()
 async def game(ctx, id: int = None, cuc: str = "USD"):
