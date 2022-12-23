@@ -28,7 +28,7 @@ bot = commands.Bot(command_prefix = "#", description = description, intents = in
 newLine = "\n"
 
 @bot.command()
-async def search(ctx, *, usrInput: str):
+async def search(ctx, *, usrInput: str = None):
     if usrInput is None:
         embed = discord.Embed()
         embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
@@ -54,11 +54,46 @@ async def search(ctx, *, usrInput: str):
         names.remove(max1)
         matches.append(max1)
 
-    await ctx.send(matches)
+    embed = discord.Embed()
+    embed.title = f'**Search Results For "{usrInput}":**'
+    embed.description = (f"""
+        **1:** {matches[0][0]}
+        
+        **2:** {matches[1][0]}
+        
+        **3:** {matches[2][0]}
+        
+        **4:** {matches[3][0]}
+        
+        **5:** {matches[4][0]}
+        
+        **6:** {matches[5][0]}
+        
+        **7:** {matches[6][0]}
+        
+        **8:** {matches[7][0]}
+        
+        **9:** {matches[8][0]}
+        
+        **10:** {matches[9][0]}""")
+
+    embed.set_footer(text = f"Command requested by {ctx.author.display_name}", icon_url = ctx.author.avatar.url)
+
+    await ctx.send(embed = embed)
+
+    content = None
+    def outside(m):
+        content = m.content
+    def check(m):
+        outside(m)
+        return int(m.content) >= 0 and int(m.content) <= 10 and m.channel == ctx.channel 
+    
+    msg = await bot.wait_for("message", check = check)
+    print(check)
+    await game_command_logic(ctx, matches[content][2], "USD")
 
 
-@bot.command()
-async def game(ctx, id: int = None, cuc: str = "USD"):
+async def game_command_logic(ctx, id: int = None, cuc: str = "USD"):
     cuc = cuc.upper()
     if id is None:
         embed = discord.Embed()
@@ -150,6 +185,10 @@ async def game(ctx, id: int = None, cuc: str = "USD"):
         embed.description = "**The app you requested does not exist**"
 
     await ctx.send(embed = embed)
+
+@bot.command()
+async def game(ctx, id: int = None, cuc: str = "USD"):
+    await game_command_logic(ctx, id, cuc)
 
 @bot.command()
 async def user(ctx, id: str = None):
