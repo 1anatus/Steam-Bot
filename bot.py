@@ -5,17 +5,22 @@ from discord.ext import commands, tasks
 import steam
 
 import json
+import ujson
 from urllib.request import urlopen
 
 import asyncio
 import aiohttp
 import requests
 import random
+import math
 
 from colorthief import ColorThief
 import webcolors
 
 from thefuzz import fuzz, process
+
+from multiprocessing import Process
+import sys
 
 description = """Be notified about Steam"""
 
@@ -28,7 +33,7 @@ bot = commands.Bot(command_prefix = "#", description = description, intents = in
 newLine = "\n"
 
 @bot.command()
-async def search(ctx, *, usrInput: str = None):
+async def search(ctx, *, usrInput: str):
     if usrInput is None:
         embed = discord.Embed()
         embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
@@ -37,7 +42,7 @@ async def search(ctx, *, usrInput: str = None):
     
     url = f"http://api.steampowered.com/ISteamApps/GetAppList/v0002/?key={keys.steamAPI.key}&format=json"
     response = urlopen(url)
-    dataJSON = json.loads(response.read())["applist"]["apps"]
+    dataJSON = ujson.loads(response.read())["applist"]["apps"]
 
     names = []
     for i in dataJSON:
