@@ -4,23 +4,16 @@ import discord
 from discord.ext import commands, tasks
 import steam
 
-import json
 import ujson
 from urllib.request import urlopen
 
 import asyncio
 import aiohttp
-import requests
-import random
-import math
 
 from colorthief import ColorThief
 import webcolors
 
 from thefuzz import fuzz, process
-
-from multiprocessing import Process
-import sys
 
 description = """Be notified about Steam"""
 
@@ -32,10 +25,35 @@ bot = commands.Bot(command_prefix = "#", description = description, intents = in
 
 newLine = "\n"
 
+with open("multiCountryCurrencies.json", "r") as multiCurrencyFile:
+        multiCurrencyData = ujson.loads(multiCurrencyFile.read())["multiCountryCurrencies"]["currency"]
+with open("countries.json", "r") as mainCurrencyFile:
+    mainCurrencyData = ujson.loads(mainCurrencyFile.read())["countries"]["country"]
+
 @bot.command()
-async def search(ctx, *, usrInput: str):
+async def search(ctx, cuc: str, *, usrInput: str):
     if usrInput is None:
         embed = discord.Embed()
+        embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
+        await ctx.send(embed = embed)
+        return
+
+    cuc = cuc.upper()
+    validCurrency = False
+    for i in multiCurrencyData:
+        if validCurrency:
+            break
+        if i["currencyCode"] == cuc:
+            validCurrency = True
+    for i in mainCurrencyData:
+        if validCurrency:
+            break
+        if i["currencyCode"] == cuc:
+            validCurrency = True
+
+    if not validCurrency:
+        embed = discord.Embed()
+        embed.title = "**You Entered an Invalid Currency**"
         embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
         await ctx.send(embed = embed)
         return
@@ -46,21 +64,21 @@ async def search(ctx, *, usrInput: str):
 
     names = []
     for i in dataJSON:
-        names.append([i["name"], fuzz.ratio(i["name"], usrInput), i["appid"]])
+        names.append((i["name"], fuzz.ratio(i["name"], usrInput), i["appid"]))
 
     matches = []
     for i in range(0, 10):
-        max1 = [None, 0]
+        max1 = (None, 0, None)
 
         for x in range(len(names)):
             if names[x][1] > max1[1]:
-                max1 = [names[x][0], names[x][1], names[x][2]]
+                max1 = names[x]
         
         names.remove(max1)
         matches.append(max1)
 
     embed = discord.Embed()
-    embed.title = f'**Search Results For "{usrInput}":**'
+    embed.title = f'**Search Results For "{usrInput}"**'
     embed.description = (f"""
         **1:** {matches[0][0]}
         
@@ -83,19 +101,19 @@ async def search(ctx, *, usrInput: str):
         **10:** {matches[9][0]}""")
 
     embed.set_footer(text = f"Command requested by {ctx.author.display_name}", icon_url = ctx.author.avatar.url)
-
     await ctx.send(embed = embed)
 
-    content = None
-    def outside(m):
-        content = m.content
-    def check(m):
-        outside(m)
-        return int(m.content) >= 0 and int(m.content) <= 10 and m.channel == ctx.channel 
-    
-    msg = await bot.wait_for("message", check = check)
-    print(check)
-    await game_command_logic(ctx, matches[content][2], "USD")
+    def check(msg):
+        return msg.channel == ctx.channel and int(msg.content) > 0 and int(msg.content) <= 10
+
+    try:
+        msg = await bot.wait_for("message", check = check, timeout = 15)
+        await game_command_logic(ctx, matches[int(msg.content) - 1][2], cuc)
+    except asyncio.TimeoutError:
+        embed = discord.Embed()
+        embed.title = "**You Didn't Enter a Valid Choice in Time**"
+        embed.description = "A short guide on how to use this command can be found [here](https://gist.github.com/skearya/2fe5a7cec196ba59f6bc9ca3864bd163)."
+        await ctx.send(embed = embed)
 
 
 async def game_command_logic(ctx, id: int = None, cuc: str = "USD"):
@@ -106,10 +124,6 @@ async def game_command_logic(ctx, id: int = None, cuc: str = "USD"):
         await ctx.send(embed = embed)
         return
 
-    with open("multiCountryCurrencies.json", "r") as multiCurrencyFile:
-        multiCurrencyData = json.loads(multiCurrencyFile.read())["multiCountryCurrencies"]["currency"]
-    with open("countries.json", "r") as mainCurrencyFile:
-        mainCurrencyData = json.loads(mainCurrencyFile.read())["countries"]["country"]
     cc = "us"
     if cuc != "USD":
         for i in multiCurrencyData:
@@ -122,7 +136,7 @@ async def game_command_logic(ctx, id: int = None, cuc: str = "USD"):
 
     url = f"http://store.steampowered.com/api/appdetails?appids={id}&cc={cc}"
     response = urlopen(url)
-    _dataJSON = json.loads(response.read())[f"{id}"]
+    _dataJSON = ujson.loads(response.read())[f"{id}"]
     if _dataJSON["success"] == True:
         dataJSON = _dataJSON["data"]
 
@@ -172,12 +186,13 @@ async def game_command_logic(ctx, id: int = None, cuc: str = "USD"):
 
             **Release Date:** {releaseDate if not isComingSoon else f"Coming Soon ({releaseDate})"}
 
-            **Retail Price:** {f"{str(float(basePrice / 100))}{currency}" if hasPrice else "Free" if isFree else "TBA"}
-            **Current Price:** {f'{str(float(currentPrice / 100))}{currency} {f"***({discount}% off)***" if discount != 0 else ""}' if hasPrice else "Free" if isFree else "TBA"}""")
+            **Retail Price:** {f"{str(float(basePrice / 100))} **{currency}**" if hasPrice else "Free" if isFree else "TBA"}
+            **Current Price:** {f'{str(float(currentPrice / 100))} **{currency}** {f"***({discount}% off)***" if discount != 0 else ""}' if hasPrice else "Free" if isFree else "TBA"}""")
+        
         if not isDLC:
             embedDescription = embedDescription + f"{newLine}**DLC:** {dlcCount}"
         else:
-            embedDescription = f"**DLC for {baseGame} *(ID: {baseGameID})***" + newLine + embedDescription
+            embedDescription = f"**DLC for {baseGame}** {newLine}{embedDescription}"
         embed.description = embedDescription
     else:
         embed = discord.Embed()
@@ -204,17 +219,6 @@ async def user(ctx, id: str = None):
         return
     
     await ctx.send(f"https://steamcommunity.com/id/{id}")
-
-@bot.command()
-async def prestonpc(ctx):
-    if ctx.message.author.id == keys.ids.user.uuid1:
-        await ctx.send('nah')
-        return
-    else:
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.catboys.com/img") as resp:
-                data = await resp.json()
-                await ctx.send(data["url"])
 
 @bot.command()
 async def shutdown(ctx):
